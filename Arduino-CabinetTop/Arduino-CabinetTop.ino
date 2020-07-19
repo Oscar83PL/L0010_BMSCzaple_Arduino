@@ -5,6 +5,7 @@
     Wersja:   20190824 Dwie linie 1Wire, Upgrade Settimino lib to v2.0
     Wersja:   20200425  Configuracja pod VSCode
 
+
 */
 
 //#include <Wire.h>
