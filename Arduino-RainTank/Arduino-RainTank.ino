@@ -1,5 +1,15 @@
-// Simple I2C test for ebay 128x32 oled.
+/*  
+    Projekt:  BMS Czaple
+    Wersja:   20200719
+                      - optymalizacja kodu
 
+
+*/
+
+
+// ===============================================================
+// ==========================> INCLUDE <==========================
+// ===============================================================
 #include <Wire.h>
 #include "SSD1306Ascii.h"
 #include "SSD1306AsciiWire.h"
@@ -7,34 +17,44 @@
 #include <SPI.h>
 #include <LoRa.h>
 
-// 0X3C+SA0 - 0x3C or 0x3D
-#define I2C_ADDRESS 0x3C
 
-// Define proper RST_PIN if required.
-#define RST_PIN -1
+// ===============================================================
+// ==========================> DEFINE  <==========================
+// ===============================================================
+#define I2C_ADDRESS 0x3C      // oled SSD1306 address wire (0X3C+SA0 - 0x3C or 0x3D)
+#define RST_PIN -1            // oled proper RST_PIN if required.
 
+
+// ===============================================================
+// =====================> DECLARE OBJECTS  <======================
+// ===============================================================
 SSD1306AsciiWire oled;
 Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 
+
+
+// ===============================================================
+// =====================> GLOBAL VARIABLE  <======================
+// ===============================================================
 int counter = 0;
 short watchdog = 0;
 
 //------------------------------------------------------------------------------
-void setup()
+void setup() /****** SETUP: RUNS ONCE ******/
 {
   Wire.begin();
   Wire.setClock(400000L);
 
-#if RST_PIN >= 0
-  oled.begin(&Adafruit128x32, I2C_ADDRESS, RST_PIN);
-#else  // RST_PIN >= 0
-  oled.begin(&Adafruit128x32, I2C_ADDRESS);
-#endif // RST_PIN >= 0
+  #if RST_PIN >= 0
+    oled.begin(&Adafruit128x32, I2C_ADDRESS, RST_PIN);
+  #else  // RST_PIN <= 0
+    oled.begin(&Adafruit128x32, I2C_ADDRESS);
+  #endif 
 
   oled.setFont(Adafruit5x7);
   oled.set1X();
 
-  oled.print(F("LoRa.. "));
+  oled.print(F("LoRa... "));
   if (!LoRa.begin(433E6))
   {
     oled.print(F("failed!"));
@@ -55,8 +75,10 @@ void setup()
   delay(500);
   oled.println(F(" ok."));
   delay(3000);
-}
-//------------------------------------------------------------------------------
+}                                           //--(end setup )---
+
+
+
 void loop()
 {
 
