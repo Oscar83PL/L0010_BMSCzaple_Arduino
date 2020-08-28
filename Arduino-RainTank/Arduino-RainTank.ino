@@ -38,32 +38,23 @@
 // ==========================> INCLUDE <==========================
 // ===============================================================
 #include <Wire.h>
-#include "SSD1306Ascii.h"
-#include "SSD1306AsciiWire.h"
 #include <SPI.h>
 #include <LoRa.h>
-#include <VL53L1X.h>
-
-#include "TM1637.h"
-
-
+#include <VL53L1X.h>      //ToF laserowy czujnik odleglosci 
+#include "TM1637.h"       //wyswietlacz 7-segmentowy
+#include <ArduinoJson.h>
 
 // ===============================================================
 // ==========================> DEFINE  <==========================
 // ===============================================================
-#define I2C_ADDRESS 0x3C      // oled SSD1306 address wire (0X3C+SA0 - 0x3C or 0x3D)
-#define RST_PIN -1            // oled proper RST_PIN if required.
-
-#define trigPin 4
-#define echoPin 3
-#define CLK_A 7
-#define DIO_A 5
-
+#define trigPin 4           //sterowanie czujnika ultradzwiekowego
+#define echoPin 3           //sterowanie czujnika ultradzwiekowego
+#define CLK_A 7             //sterowanie wyswietlacza led
+#define DIO_A 5             //sterowanie wyswietlacza led
 
 // ===============================================================
 // =====================> DECLARE OBJECTS  <======================
 // ===============================================================
-SSD1306AsciiWire oled;
 VL53L1X sensor;
 TM1637 out_Display_A(CLK_A,DIO_A);
 
@@ -75,10 +66,14 @@ int counter = 0;
 short watchdog = 0;
 
 long duration;
-int distance;
+int distance_sonar, distance_laser, distance_display;
 
 int8_t Disp_A[] = {0x00,0x00,0x00,0x00};
-int8_t Disp_B[] = {0x00,0x00,0x00,0x00};
+
+// Allocate the JSON document
+// Inside the brackets, 200 is the RAM allocated to this document.
+StaticJsonDocument<128> doc;
+String output;
 
 //------------------------------------------------------------------------------
 void setup() /****** SETUP: RUNS ONCE ******/
@@ -89,54 +84,44 @@ void setup() /****** SETUP: RUNS ONCE ******/
   
   // Begin Serial communication at a baudrate of 9600:
   Serial.begin(9600);
-  
-//  
-//  Wire.begin();
-//  Wire.setClock(400000L);
-//
-//  sensor.setTimeout(500);
-//  if (!sensor.init())
-//  {
-//    Serial.println("Failed to detect and initialize sensor!");
-//    while (1);
-//  }
-//
-//  #if RST_PIN >= 0
-//    oled.begin(&Adafruit128x32, I2C_ADDRESS, RST_PIN);
-//  #else // RST_PIN >= 0
-//    oled.begin(&Adafruit128x32, I2C_ADDRESS);
-//  #endif // RST_PIN >= 0
+  Serial.println(F("Serial ready"));
 
-//  oled.setFont(Adafruit5x7);
-//  oled.set1X();
-//
-//  oled.print(F("LoRa... "));
-//  if (!LoRa.begin(433E6))
-//  {
-//    oled.print(F("failed!"));
-//    while (1)
-//      ;
-//  }
-//  delay(500);
-//  oled.println(F(" ok."));
+  Wire.begin();
+  Wire.setClock(400000L);
+  Serial.println(F("Wire ready"));
 
+  // Start ToF sensor
+  sensor.setTimeout(500);
+  while(!sensor.init())
+  {
+    Serial.println(F("Failed to detect and initialize ToF sensor!"));
+  }
+
+  // Start LoRa
+  while(!LoRa.begin(433E6))
+  {
+    Serial.println(F("Failed to detect and initialize LoRa!"));
+  }
+  delay(500);
+
+
+   
 // Use long distance mode and allow up to 50000 us (50 ms) for a measurement.
   // You can change these settings to adjust the performance of the sensor, but
   // the minimum timing budget is 20 ms for short distance mode and 33 ms for
   // medium and long distance modes. See the VL53L1X datasheet for more
   // information on range and timing limits.
-//  sensor.setDistanceMode(VL53L1X::Long);
-//  sensor.setMeasurementTimingBudget(50000);
+  sensor.setDistanceMode(VL53L1X::Short);
+  sensor.setMeasurementTimingBudget(50000);
 
   // Start continuous readings at a rate of one measurement every 50 ms (the
   // inter-measurement period). This period should be at least as long as the
   // timing budget.
-//  sensor.startContinuous(500);
+  sensor.startContinuous(500);
 
   out_Display_A.init();
   out_Display_A.set(BRIGHT_TYPICAL);//BRIGHT_TYPICAL = 2,BRIGHT_DARKEST = 0,BRIGHTEST = 7;
 
-  delay(3000);
 }                                           //--(end setup )---
 
 
@@ -156,55 +141,48 @@ void loop()
   duration = pulseIn(echoPin, HIGH);
   
   // Calculate the distance:
-  distance = duration*0.034/2;
+  distance_sonar = duration*0.034/2;
   
-  // Print the distance on the Serial Monitor (Ctrl+Shift+M):
-  Serial.print("Distance = ");
-  Serial.print(distance);
-  Serial.println(" cm");
+  distance_laser = sensor.read() / 10;
+  if (sensor.timeoutOccurred()) { distance_laser = 9999; }
   
-//  
-//  
-//  
-//  //oled.set2X();
-//  oled.clear();
-//  oled.print("Le:");
-//  oled.print(distance);
-//  oled.println("mm   ");
-//
-//    Serial.print(sensor.read());
-//  if (sensor.timeoutOccurred()) { Serial.print(" TIMEOUT"); }
-//
-//  Serial.println();
-//
-//  oled.print("Lx:");
-//  oled.print(sensor.read());
-//  oled.println("mm   ");
-//
-//
-//  
-//  //oled.set1X();
-//  oled.print(watchdog);
-//
-//  // send packet
-//  LoRa.beginPacket();
-//  LoRa.print("Begin; Watchdog: ");
-//  LoRa.print(watchdog);
-//  LoRa.print("; L: ");
-//  LoRa.print(distance);
-//  LoRa.print("; ");
-//  LoRa.endPacket();
+  
+  if (watchdog % 2)
+  {
+    distance_display = distance_sonar; 
+  }
+  else
+  {
+    distance_display = distance_laser; 
+  }
+   
+  Disp_A[3] = distance_display % 10;
+  Disp_A[2] = (distance_display / 10) % 10;
+  Disp_A[1] = (distance_display / 100) % 10;
+  Disp_A[0] = (distance_display / 1000) % 10;
+  out_Display_A.display(Disp_A);
 
-    Disp_A[3] = distance % 10;
-    Disp_A[2] = (distance / 10) % 10;
-    Disp_A[1] = (distance / 100) % 10;
-    Disp_A[0] = (distance / 1000) % 10;
-    out_Display_A.display(Disp_A);
+  watchdog += 1;
+//  if (watchdog > 200)
+//  {
+//    watchdog = 0;
+//  }
+
+  // Assign values in the JSON document
+  doc["watchdog"] = watchdog;
+  doc["distance_sonar"] = distance_sonar;
+  doc["distance_laser"] = distance_laser;
+  
+  // Generate the prettified JSON and send it to the Serial port.
+  output = "";
+  serializeJsonPretty(doc, output);
+  Serial.println(output);
+  //serializeJsonPretty(doc, LoRa);
+  
+  // send packet
+  LoRa.beginPacket();
+  LoRa.print(output);
+  LoRa.endPacket();
 
   delay(1000);
-  watchdog += 1;
-  if (watchdog > 200)
-  {
-    watchdog = 0;
-  }
 }
