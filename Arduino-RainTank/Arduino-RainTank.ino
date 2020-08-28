@@ -42,6 +42,7 @@
 #include <LoRa.h>
 #include <VL53L1X.h>      //ToF laserowy czujnik odleglosci 
 #include "TM1637.h"       //wyswietlacz 7-segmentowy
+#include <ArduinoJson.h>
 
 // ===============================================================
 // ==========================> DEFINE  <==========================
@@ -69,51 +70,49 @@ int distance_sonar, distance_laser, distance_display;
 
 int8_t Disp_A[] = {0x00,0x00,0x00,0x00};
 
+// Allocate the JSON document
+// Inside the brackets, 200 is the RAM allocated to this document.
+StaticJsonDocument<128> doc;
+String output;
+
 //------------------------------------------------------------------------------
 void setup() /****** SETUP: RUNS ONCE ******/
 {
   // Define inputs and outputs
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
-  pinMode(LED_BUILTIN, OUTPUT);
   
   // Begin Serial communication at a baudrate of 9600:
   Serial.begin(9600);
   Serial.println(F("Serial ready"));
-  
+
   Wire.begin();
   Wire.setClock(400000L);
   Serial.println(F("Wire ready"));
-  
+
   // Start ToF sensor
   sensor.setTimeout(500);
   while(!sensor.init())
   {
     Serial.println(F("Failed to detect and initialize ToF sensor!"));
-    delay(1000);
-    digitalWrite(LED_BUILTIN, HIGH);
-    delay(1000);
-    digitalWrite(LED_BUILTIN, LOW);
   }
 
   // Start LoRa
   while(!LoRa.begin(433E6))
   {
     Serial.println(F("Failed to detect and initialize LoRa!"));
-    delay(2000);
-    digitalWrite(LED_BUILTIN, HIGH);
-    delay(2000);
-    digitalWrite(LED_BUILTIN, LOW);
   }
   delay(500);
 
+
+   
 // Use long distance mode and allow up to 50000 us (50 ms) for a measurement.
   // You can change these settings to adjust the performance of the sensor, but
   // the minimum timing budget is 20 ms for short distance mode and 33 ms for
   // medium and long distance modes. See the VL53L1X datasheet for more
   // information on range and timing limits.
   sensor.setDistanceMode(VL53L1X::Short);
-  sensor.setMeasurementTimingBudget(5000000);
+  sensor.setMeasurementTimingBudget(50000);
 
   // Start continuous readings at a rate of one measurement every 50 ms (the
   // inter-measurement period). This period should be at least as long as the
@@ -123,7 +122,6 @@ void setup() /****** SETUP: RUNS ONCE ******/
   out_Display_A.init();
   out_Display_A.set(BRIGHT_TYPICAL);//BRIGHT_TYPICAL = 2,BRIGHT_DARKEST = 0,BRIGHTEST = 7;
 
-  delay(3000);
 }                                           //--(end setup )---
 
 
@@ -145,18 +143,10 @@ void loop()
   // Calculate the distance:
   distance_sonar = duration*0.034/2;
   
-  // Print the distance on the Serial Monitor (Ctrl+Shift+M):
-  Serial.print(F("Distance = "));
-  Serial.print(distance_sonar);
-  Serial.print(F(" cm     | "));
-  
   distance_laser = sensor.read() / 10;
-  Serial.print(distance_laser);
-  if (sensor.timeoutOccurred()) { Serial.print(F(" TIMEOUT")); }
-  Serial.print(F(" cm     | "));
+  if (sensor.timeoutOccurred()) { distance_laser = 9999; }
   
-  Serial.println(watchdog);
-
+  
   if (watchdog % 2)
   {
     distance_display = distance_sonar; 
@@ -172,21 +162,27 @@ void loop()
   Disp_A[0] = (distance_display / 1000) % 10;
   out_Display_A.display(Disp_A);
 
-//
-//  // send packet
-//  LoRa.beginPacket();
-//  LoRa.print("Begin; Watchdog: ");
-//  LoRa.print(watchdog);
-//  LoRa.print("; L: ");
-//  LoRa.print(distance);
-//  LoRa.print("; ");
-//  LoRa.endPacket();
+  watchdog += 1;
+//  if (watchdog > 200)
+//  {
+//    watchdog = 0;
+//  }
 
+  // Assign values in the JSON document
+  doc["watchdog"] = watchdog;
+  doc["distance_sonar"] = distance_sonar;
+  doc["distance_laser"] = distance_laser;
+  
+  // Generate the prettified JSON and send it to the Serial port.
+  output = "";
+  serializeJsonPretty(doc, output);
+  Serial.println(output);
+  //serializeJsonPretty(doc, LoRa);
+  
+  // send packet
+  LoRa.beginPacket();
+  LoRa.print(output);
+  LoRa.endPacket();
 
   delay(1000);
-  watchdog += 1;
-  if (watchdog > 200)
-  {
-    watchdog = 0;
-  }
 }
