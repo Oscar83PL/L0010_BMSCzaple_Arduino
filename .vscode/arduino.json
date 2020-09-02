@@ -1,5 +1,8 @@
 {
-    "board": "arduino:avr:mega",
-    "configuration": "cpu=atmega2560",
-    "output": "build"
+    "board": "arduino:avr:nano",
+    "configuration": "cpu=atmega328old",
+    "output": "build",
+    "programmer": "ArduinoISP",
+    "port": "COM3",
+    "sketch": "Arduino-RainTank\\Arduino-RainTank.ino"
 }

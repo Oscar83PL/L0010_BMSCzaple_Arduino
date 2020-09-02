@@ -1,0 +1,77 @@
+[
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "C:\\Users\\Oskar\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.3\\cores\\arduino"
+  },
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "C:\\Users\\Oskar\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.3\\variants\\eightanaloginputs"
+  },
+  {
+    "Sourcefile": "c:\\Users\\Oskar\\Desktop\\Projekty\\20. Arduino\\L0010_BMSCzaple_Arduino\\build\\sketch\\Arduino-RainTank.ino.cpp",
+    "Include": "Wire.h",
+    "Includepath": "C:\\Users\\Oskar\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.3\\libraries\\Wire\\src"
+  },
+  {
+    "Sourcefile": "c:\\Users\\Oskar\\Desktop\\Projekty\\20. Arduino\\L0010_BMSCzaple_Arduino\\build\\sketch\\Arduino-RainTank.ino.cpp",
+    "Include": "SPI.h",
+    "Includepath": "C:\\Users\\Oskar\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.3\\libraries\\SPI\\src"
+  },
+  {
+    "Sourcefile": "c:\\Users\\Oskar\\Desktop\\Projekty\\20. Arduino\\L0010_BMSCzaple_Arduino\\build\\sketch\\Arduino-RainTank.ino.cpp",
+    "Include": "LoRa.h",
+    "Includepath": "C:\\Users\\Oskar\\Documents\\Arduino\\libraries\\LoRa\\src"
+  },
+  {
+    "Sourcefile": "c:\\Users\\Oskar\\Desktop\\Projekty\\20. Arduino\\L0010_BMSCzaple_Arduino\\build\\sketch\\Arduino-RainTank.ino.cpp",
+    "Include": "VL53L1X.h",
+    "Includepath": "C:\\Users\\Oskar\\Documents\\Arduino\\libraries\\VL53L1X"
+  },
+  {
+    "Sourcefile": "c:\\Users\\Oskar\\Desktop\\Projekty\\20. Arduino\\L0010_BMSCzaple_Arduino\\build\\sketch\\Arduino-RainTank.ino.cpp",
+    "Include": "TM1637.h",
+    "Includepath": "C:\\Users\\Oskar\\Documents\\Arduino\\libraries\\Grove_4-Digit_Display"
+  },
+  {
+    "Sourcefile": "c:\\Users\\Oskar\\Desktop\\Projekty\\20. Arduino\\L0010_BMSCzaple_Arduino\\build\\sketch\\Arduino-RainTank.ino.cpp",
+    "Include": "ArduinoJson.h",
+    "Includepath": "C:\\Users\\Oskar\\Documents\\Arduino\\libraries\\ArduinoJson\\src"
+  },
+  {
+    "Sourcefile": "c:\\Users\\Oskar\\Desktop\\Projekty\\20. Arduino\\L0010_BMSCzaple_Arduino\\build\\sketch\\Arduino-RainTank.ino.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\Oskar\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.3\\libraries\\Wire\\src\\Wire.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\Oskar\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.3\\libraries\\Wire\\src\\utility\\twi.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\Oskar\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.3\\libraries\\SPI\\src\\SPI.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\Oskar\\Documents\\Arduino\\libraries\\LoRa\\src\\LoRa.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\Oskar\\Documents\\Arduino\\libraries\\VL53L1X\\VL53L1X.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\Oskar\\Documents\\Arduino\\libraries\\Grove_4-Digit_Display\\TM1637.cpp",
+    "Include": "",
+    "Includepath": null
+  }
+]

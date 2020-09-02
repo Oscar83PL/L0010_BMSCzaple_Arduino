@@ -1,3 +1,5 @@
+#include <Arduino.h>
+#line 1 "c:\\Users\\Oskar\\Desktop\\Projekty\\20. Arduino\\L0010_BMSCzaple_Arduino\\Arduino-RainTank\\Arduino-RainTank.ino"
 /*
     Projekt:  BMS Czaple
     Wersja:   20200719
@@ -76,6 +78,11 @@ StaticJsonDocument<128> doc;
 String output;
 
 //------------------------------------------------------------------------------
+#line 79 "c:\\Users\\Oskar\\Desktop\\Projekty\\20. Arduino\\L0010_BMSCzaple_Arduino\\Arduino-RainTank\\Arduino-RainTank.ino"
+void setup();
+#line 129 "c:\\Users\\Oskar\\Desktop\\Projekty\\20. Arduino\\L0010_BMSCzaple_Arduino\\Arduino-RainTank\\Arduino-RainTank.ino"
+void loop();
+#line 79 "c:\\Users\\Oskar\\Desktop\\Projekty\\20. Arduino\\L0010_BMSCzaple_Arduino\\Arduino-RainTank\\Arduino-RainTank.ino"
 void setup() /****** SETUP: RUNS ONCE ******/
 {
   // Define inputs and outputs
@@ -188,3 +195,4 @@ void loop()
 
   //delay(1000);
 }
+
