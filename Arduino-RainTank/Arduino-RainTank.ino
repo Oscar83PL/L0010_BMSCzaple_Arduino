@@ -62,11 +62,11 @@ TM1637 out_Display_A(CLK_A, DIO_A);
 // ===============================================================
 // =====================> GLOBAL VARIABLE  <======================
 // ===============================================================
-int counter = 0;
-short watchdog = 0;
-
+int counter = 0, DispPageNumber = 0;
+unsigned short watchdog = 0;
+uint32_t tickTime_Disp = 0;
 long duration;
-int distance_sonar, distance_laser, distance_display;
+int distance_sonar, distance_laser;
 
 int8_t Disp_A[] = {0x00, 0x00, 0x00, 0x00};
 
@@ -91,18 +91,20 @@ void setup() /****** SETUP: RUNS ONCE ******/
   Serial.println(F("Wire ready"));
 
   // Start ToF sensor
-  sensor.setTimeout(500);
+  sensor.setTimeout(200);
   while (!sensor.init())
   {
     Serial.println(F("Failed to detect and initialize ToF sensor!"));
   }
 
   // Start LoRa
+  LoRa.setTxPower(2);
   while (!LoRa.begin(433E6))
   {
     Serial.println(F("Failed to detect and initialize LoRa!"));
   }
   delay(500);
+  LoRa.setTxPower(2);
 
 
 
@@ -111,13 +113,13 @@ void setup() /****** SETUP: RUNS ONCE ******/
   // the minimum timing budget is 20 ms for short distance mode and 33 ms for
   // medium and long distance modes. See the VL53L1X datasheet for more
   // information on range and timing limits.
-  sensor.setDistanceMode(VL53L1X::Long);
-  sensor.setMeasurementTimingBudget(50000);
+  sensor.setDistanceMode(VL53L1X::Medium);
+  sensor.setMeasurementTimingBudget(200000);
 
   // Start continuous readings at a rate of one measurement every 50 ms (the
   // inter-measurement period). This period should be at least as long as the
   // timing budget.
-  sensor.startContinuous(50);
+  sensor.startContinuous(1000);
 
   out_Display_A.init();
   out_Display_A.set(BRIGHT_TYPICAL);//BRIGHT_TYPICAL = 2,BRIGHT_DARKEST = 0,BRIGHTEST = 7;
@@ -128,63 +130,88 @@ void setup() /****** SETUP: RUNS ONCE ******/
 
 void loop()
 {
-  // Clear the trigPin by setting it LOW:
-  digitalWrite(trigPin, LOW);
 
-  delayMicroseconds(5);
-  // Trigger the sensor by setting the trigPin high for 10 microseconds:
-  digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
 
-  // Read the echoPin. pulseIn() returns the duration (length of the pulse) in microseconds:
-  duration = pulseIn(echoPin, HIGH);
 
-  // Calculate the distance:
-  distance_sonar = duration * 0.034 / 2;
 
-  distance_laser = sensor.read() / 10;
-  //  if (sensor.timeoutOccurred()) { distance_laser = 9999; }
-  if (sensor.timeoutOccurred()) {
-    Serial.print(" TIMEOUT");
+  if (tickTime_Disp <= millis()) {
+    tickTime_Disp = millis() + 3000;
+
+    switch (DispPageNumber) {
+      case 1:
+        sensor.read();
+        Serial.print("range: ");
+        Serial.print(sensor.ranging_data.range_mm);
+        Serial.print("\tstatus: ");
+        Serial.print(VL53L1X::rangeStatusToString(sensor.ranging_data.range_status));
+        Serial.print("\tpeak signal: ");
+        Serial.print(sensor.ranging_data.peak_signal_count_rate_MCPS);
+        Serial.print("\tambient: ");
+        Serial.print(sensor.ranging_data.ambient_count_rate_MCPS);
+
+        distance_laser = sensor.ranging_data.range_mm / 10;
+        //  if (sensor.timeoutOccurred()) { distance_laser = 9999; }
+        if (sensor.timeoutOccurred()) {
+          Serial.print(" TIMEOUT");
+        }
+
+
+        Disp_A[3] = distance_laser % 10;
+        Disp_A[2] = (distance_laser / 10) % 10;
+        Disp_A[1] = (distance_laser / 100) % 10;
+        Disp_A[0] = 12;
+        out_Display_A.display(Disp_A);
+
+        break;
+      case 2:
+        // Assign values in the JSON document
+        doc["watchdog"] = watchdog;
+        doc["distance_sonar"] = distance_sonar;
+        doc["distance_laser"] = distance_laser;
+
+        // Generate the prettified JSON and send it to the Serial port.
+        output = "";
+        serializeJsonPretty(doc, output);
+        Serial.println(output);
+            // send packet
+            LoRa.beginPacket();
+            LoRa.print(output);
+            LoRa.endPacket(true);
+        break;
+      //      case 3:
+      //        ;
+      //        break;
+      default:
+        DispPageNumber = 0;
+
+        // Clear the trigPin by setting it LOW:
+        digitalWrite(trigPin, LOW);
+
+        delayMicroseconds(5);
+        // Trigger the sensor by setting the trigPin high for 10 microseconds:
+        digitalWrite(trigPin, HIGH);
+        delayMicroseconds(10);
+        digitalWrite(trigPin, LOW);
+
+        // Read the echoPin. pulseIn() returns the duration (length of the pulse) in microseconds:
+        duration = pulseIn(echoPin, HIGH);
+
+        // Calculate the distance:
+        distance_sonar = duration * 0.034 / 2;
+
+
+        Disp_A[3] = distance_sonar % 10;
+        Disp_A[2] = (distance_sonar / 10) % 10;
+        Disp_A[1] = (distance_sonar / 100) % 10;
+        Disp_A[0] = 10;
+        out_Display_A.display(Disp_A);
+
+        break;
+    }
+    DispPageNumber += 1;
+
   }
-
-  if (watchdog % 2)
-  {
-    distance_display = distance_sonar;
-  }
-  else
-  {
-    distance_display = distance_laser;
-  }
-
-  Disp_A[3] = distance_display % 10;
-  Disp_A[2] = (distance_display / 10) % 10;
-  Disp_A[1] = (distance_display / 100) % 10;
-  Disp_A[0] = (distance_display / 1000) % 10;
-  out_Display_A.display(Disp_A);
 
   watchdog += 1;
-  //  if (watchdog > 200)
-  //  {
-  //    watchdog = 0;
-  //  }
 
-  // Assign values in the JSON document
-  doc["watchdog"] = watchdog;
-  doc["distance_sonar"] = distance_sonar;
-  doc["distance_laser"] = distance_laser;
-
-  // Generate the prettified JSON and send it to the Serial port.
-  output = "";
-  serializeJsonPretty(doc, output);
-  Serial.println(output);
-  //serializeJsonPretty(doc, LoRa);
-
-  // send packet
-  LoRa.beginPacket();
-  LoRa.print(output);
-  LoRa.endPacket();
-
-  //delay(1000);
 }
