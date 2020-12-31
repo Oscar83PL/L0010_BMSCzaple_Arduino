@@ -135,7 +135,7 @@ void loop()
 
 
   if (tickTime_Disp <= millis()) {
-    tickTime_Disp = millis() + 3000;
+    tickTime_Disp = millis() + 2000;
 
     switch (DispPageNumber) {
       case 1:
@@ -209,9 +209,10 @@ void loop()
         break;
     }
     DispPageNumber += 1;
-
+    watchdog += 1;
+    if (watchdog > 255) {watchdog = 0;}
   }
 
-  watchdog += 1;
+
 
 }

@@ -6,8 +6,8 @@
 // ==========================> INCLUDE <==========================
 // ===============================================================
 #include <DallasTemperature.h>
-#include <Adafruit_BMP085.h>
-#include <Adafruit_BME280.h>
+//#include <Adafruit_BMP085.h>
+//#include <Adafruit_BME280.h>
 #include <SPI.h>
 #include <LoRa.h>
 #include <ArduinoJson.h>
@@ -16,6 +16,7 @@
 #include "Platform.h"
 #include "Settimino.h"
 #include "TempSensors.h"
+#include <PubSubClient.h>
 
 // ===============================================================
 // ==========================> DEFINE  <==========================
@@ -55,8 +56,8 @@ OneWire oneWireLines[] = {ONE_WIRE_BUS_PIN_LINE_A,
 const int oneWireCount = sizeof(oneWireLines) / sizeof(OneWire);
 DallasTemperature sensor[oneWireCount];
 
-Adafruit_BMP085 bmp;
-Adafruit_BME280 bme;
+//Adafruit_BMP085 bmp;
+//Adafruit_BME280 bme;
 
 
 // ===============================================================
@@ -69,6 +70,7 @@ int LoRaRSSI = 0;
 String incoming;
 uint32_t tickTime_OledPage = 0;
 uint32_t tickTime_CommPLC = 0;
+String OledOutput[10] = {};
 
 // Allocate the JSON document
 // Inside the brackets, 200 is the RAM allocated to this document.
@@ -86,7 +88,8 @@ byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xEE};
 
 IPAddress ipArduino(192,168,51,200);                  // Local Address
 IPAddress ipPLC(192,168,51,199);                      // PLC Address
-IPAddress gateway(192, 168, 51, 100);
+IPAddress ipBroker(192,168,51,149);                   // MQTT Broker Address
+IPAddress gateway(192, 168, 51, 1);
 IPAddress subnet(255, 255, 255, 0);
 
 /*-----( Declare Variables )-----*/
@@ -98,6 +101,9 @@ bool PLC_ConectionEstablished = false;
 // S7Client will create an EthernetClient as TCP Client
 S7Client Client;
 
+EthernetClient ethClient;
+PubSubClient client(ethClient);
+
 
 void setup() /****** SETUP: RUNS ONCE ******/
 {
@@ -108,7 +114,7 @@ void setup() /****** SETUP: RUNS ONCE ******/
   //oled.setFont(Callibri11);
   oled.setFont(Adafruit5x7);
   oled.clear();
-  oled.set2X();
+  oled.set1X();
   
   oled.println("Display OLED ... ");
   delay(250);
@@ -117,32 +123,38 @@ void setup() /****** SETUP: RUNS ONCE ******/
   
   oled.clear();
   oled.println("Serial ... ");
-  Serial.begin(9600);
+  Serial.begin(115200);
   while (!Serial);
   delay(250);
   oled.println("OK");
   delay(750);
   
   
-  Serial.println("LoRa Receiver");
-
-
-  pinMode(LORA_SS, OUTPUT);
-  digitalWrite(LORA_SS, HIGH);
-  LoRa.setPins(LORA_SS, LORA_RST, LORA_DIO0);
-  oled.clear();
-  oled.println("LoRa module ...  ");
-  if (!LoRa.begin(433E6)) {
-    Serial.println("Starting LoRa failed!");
-    while (1);
-  }
-  delay(250);
-  oled.println("OK");
-  delay(750);
+//  Serial.println("LoRa Receiver");
+//
+//
+//  pinMode(LORA_SS, OUTPUT);
+//  digitalWrite(LORA_SS, HIGH);
+//  LoRa.setPins(LORA_SS, LORA_RST, LORA_DIO0);
+//  oled.clear();
+//  oled.println("LoRa module ...  ");
+//  if (!LoRa.begin(433E6)) {
+//    Serial.println("Starting LoRa failed!");
+//    while (1);
+//  }
+//  delay(250);
+//  oled.println("OK");
+//  delay(750);
   
   //--------------------------------Wired Ethernet Shield Initialization
   //Start the Ethernet Library
   EthernetInit(mac, ipArduino);
+  client.setServer(ipBroker, 1883);
+  client.setCallback(callback);
+
+//  Ethernet.begin(mac, ipArduino);
+ 
+  
 
   //Setup Time, someone said me to leave 2000 because some
   //rubbish compatible boards are a bit deaf.
@@ -235,6 +247,13 @@ void setup() /****** SETUP: RUNS ONCE ******/
 
 void loop() /****** LOOP: RUNS CONSTANTLY ******/
 {
+
+//  if (!client.connected()) {
+//    reconnect();
+//  }
+//  client.loop();
+  
+  
   // try to parse packet
   int packetSize = LoRa.parsePacket();
   if (packetSize) {
@@ -249,11 +268,11 @@ void loop() /****** LOOP: RUNS CONSTANTLY ******/
       incoming += (char)LoRa.read();
     }
     
-    Serial.println(incoming);
+    //Serial.println(incoming);
     // print RSSI of packet
-    Serial.print("' with RSSI ");
+    //Serial.print("' with RSSI ");
     LoRaRSSI = LoRa.packetRssi();
-    Serial.println(LoRaRSSI);
+    //Serial.println(LoRaRSSI);
   
     // Deserialize the JSON document
     DeserializationError error = deserializeJson(doc, incoming);
@@ -276,88 +295,100 @@ void loop() /****** LOOP: RUNS CONSTANTLY ******/
 
   }
 
-  Serial.println();
-
-  if (sensor[0].getDeviceCount()) {sensor[0].requestTemperatures();}
-  if (sensor[1].getDeviceCount()) {sensor[1].requestTemperatures();}
-  if (sensor[2].getDeviceCount()) {sensor[2].requestTemperatures();}
-  if (sensor[3].getDeviceCount()) {sensor[3].requestTemperatures();}
+//  if (sensor[0].getDeviceCount()) {sensor[0].requestTemperatures();}
+//  if (sensor[1].getDeviceCount()) {sensor[1].requestTemperatures();}
+//  if (sensor[2].getDeviceCount()) {sensor[2].requestTemperatures();}
+//  if (sensor[3].getDeviceCount()) {sensor[3].requestTemperatures();}
   
   
-  Serial.println("=== DS18b20 temperature line A ===");
-  for (int i = 0; i < NUM_SENSORS_LINE_A; i++)
-  {
-    Serial.print("DS18b20 no. ");
-    Serial.print(i);
-    Serial.print(" temperature is:   ");
-    printTemperature(0, Sensor_Address_Line_A[i]);
-    Serial.println();
-  }
-
-  Serial.println("=== DS18b20 temperature line B ===");
-  for (int i = 0; i < NUM_SENSORS_LINE_B; i++)
-  {
-    Serial.print("DS18b20 no. ");
-    Serial.print(i);
-    Serial.print(" temperature is:   ");
-    printTemperature(1, Sensor_Address_Line_B[i]);
-    Serial.println();
-  }
-
-  Serial.println("=== DS18b20 temperature line C ===");
-  for (int i = 0; i < NUM_SENSORS_LINE_C; i++)
-  {
-    Serial.print("DS18b20 no. ");
-    Serial.print(i);
-    Serial.print(" temperature is:   ");
-    printTemperature(0, Sensor_Address_Line_C[i]);
-    Serial.println();
-  }
-
-  Serial.println("=== DS18b20 temperature line D ===");
-  for (int i = 0; i < NUM_SENSORS_LINE_D; i++)
-  {
-    Serial.print("DS18b20 no. ");
-    Serial.print(i);
-    Serial.print(" temperature is:   ");
-    printTemperature(1, Sensor_Address_Line_D[i]);
-    Serial.println();
-  }
+//  Serial.println("=== DS18b20 temperature line A ===");
+//  for (int i = 0; i < NUM_SENSORS_LINE_A; i++)
+//  {
+//    Serial.print("DS18b20 no. ");
+//    Serial.print(i);
+//    Serial.print(" temperature is:   ");
+//    printTemperature(0, Sensor_Address_Line_A[i]);
+//    Serial.println();
+//  }
+//
+//  Serial.println("=== DS18b20 temperature line B ===");
+//  for (int i = 0; i < NUM_SENSORS_LINE_B; i++)
+//  {
+//    Serial.print("DS18b20 no. ");
+//    Serial.print(i);
+//    Serial.print(" temperature is:   ");
+//    printTemperature(1, Sensor_Address_Line_B[i]);
+//    Serial.println();
+//  }
+//
+//  Serial.println("=== DS18b20 temperature line C ===");
+//  for (int i = 0; i < NUM_SENSORS_LINE_C; i++)
+//  {
+//    Serial.print("DS18b20 no. ");
+//    Serial.print(i);
+//    Serial.print(" temperature is:   ");
+//    printTemperature(0, Sensor_Address_Line_C[i]);
+//    Serial.println();
+//  }
+//
+//  Serial.println("=== DS18b20 temperature line D ===");
+//  for (int i = 0; i < NUM_SENSORS_LINE_D; i++)
+//  {
+//    Serial.print("DS18b20 no. ");
+//    Serial.print(i);
+//    Serial.print(" temperature is:   ");
+//    printTemperature(1, Sensor_Address_Line_D[i]);
+//    Serial.println();
+//  }
 
   if (tickTime_OledPage <= millis()) {
     tickTime_OledPage = millis() + 5000;
 
-    
-    oled.clear();
-    switch (OledPageNumber) {
-      case 1:    
-        oled.print(F("Sonar: "));
-        oled.print(distance_sonar);
-        oled.println(F(" cm"));
-        oled.print(F("Laser: "));
-        oled.print(distance_laser);
-        oled.println(F(" cm")); ;
-        break;
-      case 2:    
-        ;
-        break;
-      case 3:    
-        oled.print(F("RSSI: "));
-        oled.println(LoRaRSSI);
-        break;
-      case 4:    
-        oled.print(F("PLC: "));
-        oled.println(PLC_ConectionEstablished);
-        break;
-      default:
-        OledPageNumber = 0;
-        oled.println(F("Watchdog tank: "));
-        oled.println(watchdog);
-        break;
-    }
-    OledPageNumber += 1;
+    OledOutput[0] = "Sonar: " + String(distance_sonar) + " cm";
+    OledOutput[1] = "Laser: " + String(distance_laser) + " cm";
+    OledOutput[2] = "RSSI : " + String(LoRaRSSI) + " dB";
+    OledOutput[3] = "PLC  : " + String(PLC_ConectionEstablished);
+    OledOutput[4] = "Wdog : " + String(watchdog);
+    OledOutput[5] = "Laser: " + String(distance_laser) + " cm";
 
-  }
+    oled.clear();
+    for(int i=0+OledPageNumber; i < 4+OledPageNumber; i++)
+    {
+      oled.println(OledOutput[i]);
+    } 
+    OledPageNumber++;
+//    if (OledPageNumber > 5) OledPageNumber = 0;
+//    
+//    oled.clear();
+//    switch (OledPageNumber) {
+//      case 1:    
+//        oled.print(F("Sonar: "));
+//        oled.print(distance_sonar);
+//        oled.println(F(" cm"));
+//        oled.print(F("Laser: "));
+//        oled.print(distance_laser);
+//        oled.println(F(" cm")); ;
+//        break;
+//      case 2:    
+//        ;
+//        break;
+//      case 3:    
+//        oled.print(F("RSSI: "));
+//        oled.println(LoRaRSSI);
+//        break;
+//      case 4:    
+//        oled.print(F("PLC: "));
+//        oled.println(PLC_ConectionEstablished);
+//        break;
+//      default:
+//        OledPageNumber = 0;
+//        oled.println(F("Watchdog tank: "));
+//        oled.println(watchdog);
+//        break;
+//    }
+//    OledPageNumber += 1;
+//
+//  }
 
 
   if (tickTime_CommPLC <= millis()) {
@@ -418,7 +449,7 @@ void loop() /****** LOOP: RUNS CONSTANTLY ******/
     S7.SetIntAt(Target, 50, distance_sonar);
     S7.SetIntAt(Target, 52, distance_laser);
     
-MarkTime();
+    MarkTime();
     Result = Client.WriteArea(S7AreaDB, // We are requesting DB access
                               DBNum,    // DB Number
                               0,        // Start from byte N.0
@@ -446,7 +477,7 @@ MarkTime();
   }
 
 
-
+  }
 
   
 } /****** LOOP: RUNS CONSTANTLY (end main loop  ******/
@@ -594,3 +625,34 @@ void getDeviceAddress(int OneWireLine)
   oneWireLines[OneWireLine].reset_search();
   return;
 }
+
+void callback(char* topic, byte* payload, unsigned int length) {
+  Serial.print("Message arrived [");
+  Serial.print(topic);
+  Serial.print("] ");
+  for (int i=0;i<length;i++) {
+    Serial.print((char)payload[i]);
+  }
+  Serial.println();
+}
+
+void reconnect() {
+  // Loop until we're reconnected
+  while (!client.connected()) {
+    Serial.print("Attempting MQTT connection...");
+    // Attempt to connect
+        if (client.connect("arduinoClient")) {
+        Serial.println("connected");
+        // Once connected, publish an announcement...
+        client.publish("outTopic","hello world");
+        // ... and resubscribe
+        client.subscribe("inTopic");
+      } else {
+        Serial.print("failed, rc=");
+        Serial.print(client.state());
+        Serial.println(" try again in 5 seconds");
+        // Wait 5 seconds before retrying
+        delay(5000);
+      }
+    }
+  }
