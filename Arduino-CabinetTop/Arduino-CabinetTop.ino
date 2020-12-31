@@ -18,8 +18,8 @@
 // ==========================> INCLUDE <==========================
 // ===============================================================
 #include <DallasTemperature.h>
-#include <Adafruit_BMP085.h>
-#include <Adafruit_BME280.h>
+//#include <Adafruit_BMP085.h>
+//#include <Adafruit_BME280.h>
 #include "Platform.h"
 #include "Settimino.h"
 #include "TempSensors.h"
@@ -37,7 +37,7 @@
 #define SEALEVELPRESSURE_HPA (1013.25)
 //#define DO_IT_SMALL                         // Uncomment line to perform small and fast data access
 
-#define GSM_Serial Serial1
+//#define GSM_Serial Serial1
 
 // ===============================================================
 // =====================> DECLARE OBJECTS  <======================
@@ -46,17 +46,17 @@ OneWire oneWireLines[] = {ONE_WIRE_BUS_PIN_LINE_A,
                           ONE_WIRE_BUS_PIN_LINE_B};
 const int oneWireCount = sizeof(oneWireLines) / sizeof(OneWire);
 DallasTemperature sensor[oneWireCount];
-Adafruit_BMP085 bmp;
-Adafruit_BME280 bme;
+//Adafruit_BMP085 bmp;
+//Adafruit_BME280 bme;
 
 // ===============================================================
 // ====================> ETHERNET SETTINGS  <=====================
 // ===============================================================
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
-IPAddress ipArduino(192, 168, 8, 215); // Local Address
-IPAddress gateway(192, 168, 8, 1);     // Local Gateway
+IPAddress ipArduino(192, 168, 100, 215); // Local Address
+IPAddress gateway(192, 168, 100, 1);     // Local Gateway
 IPAddress subnet(255, 255, 255, 0);    // Local Subnet
-IPAddress ipPLC(192, 168, 8, 210);     // Remote PLC Address
+IPAddress ipPLC(192, 168, 100, 210);     // Remote PLC Address
 
 //IPAddress ipArduino(192,168,51,200);                  // Local Address
 //IPAddress ipPLC(192,168,51,199);                      // PLC Address
@@ -75,8 +75,8 @@ void setup() /****** SETUP: RUNS ONCE ******/
 {
 
   // start serial port to show results
-  Serial.begin(115200);
-  GSM_Serial.begin(115200);
+  Serial.begin(9600);
+//  GSM_Serial.begin(115200);
   Serial.println("-------- INITIALIZATION STARTED --------");
 
   // Reset TWI interface sensors
@@ -150,24 +150,24 @@ void setup() /****** SETUP: RUNS ONCE ******/
     Serial.println();
 #endif
   }
-  Serial.println("");
-  Serial.print("Initializing BMP085 Sensor... ");
+//  Serial.println("");
+//  Serial.print("Initializing BMP085 Sensor... ");
   bool status;
-  status = bmp.begin(0x77);
-  if (!status)
-  {
-    Serial.print("  => Could not find a valid BMP085 sensor, check wiring!");
-    ;
-  }
+//  status = bmp.begin(0x77);
+//  if (!status)
+//  {
+//    Serial.print("  => Could not find a valid BMP085 sensor, check wiring!");
+//    ;
+//  }
 
   Serial.println("");
   Serial.print("Initializing BME280 Sensor... ");
-  status = bme.begin(0x76);
-  if (!status)
-  {
-    Serial.print("  => Could not find a valid BME280 sensor, check wiring!");
-    ;
-  }
+//  status = bme.begin(0x76);
+//  if (!status)
+//  {
+//    Serial.print("  => Could not find a valid BME280 sensor, check wiring!");
+//    ;
+//  }
 
   delay(1000);
   Serial.println(" ");
@@ -226,47 +226,47 @@ void loop() /****** LOOP: RUNS CONSTANTLY ******/
     Serial.println();
   }
 
-  //--------------- bme sensor ------------------------
-  Serial.print("Temperature = ");
-  Serial.print(bme.readTemperature());
-  Serial.println(" stC");
+//  //--------------- bme sensor ------------------------
+//  Serial.print("Temperature = ");
+//  Serial.print(bme.readTemperature());
+//  Serial.println(" stC");
+//
+//  Serial.print("Pressure = ");
+//  Serial.print(bme.readPressure() / 100.0F);
+//  Serial.println(" hPa");
+//
+//  Serial.print("Approx. Altitude = ");
+//  Serial.print(bme.readAltitude(SEALEVELPRESSURE_HPA));
+//  Serial.println(" m");
+//
+//  Serial.print("Humidity = ");
+//  Serial.print(bme.readHumidity());
+//  Serial.println(" %");
+//
+//  Serial.println();
 
-  Serial.print("Pressure = ");
-  Serial.print(bme.readPressure() / 100.0F);
-  Serial.println(" hPa");
-
-  Serial.print("Approx. Altitude = ");
-  Serial.print(bme.readAltitude(SEALEVELPRESSURE_HPA));
-  Serial.println(" m");
-
-  Serial.print("Humidity = ");
-  Serial.print(bme.readHumidity());
-  Serial.println(" %");
-
-  Serial.println();
-
-  //--------------- bmp sensor ------------------------
-  Serial.print("Temperature = ");
-  Serial.print(bmp.readTemperature());
-  Serial.println(" stC");
-
-  Serial.print("Pressure = ");
-  Serial.print(bmp.readPressure());
-  Serial.println(" Pa");
-
-  // Calculate the elevation using the barometric pressure pattern
-  // of 1013.25 millibar = 101325 Pascal
-  Serial.print("Altitude = ");
-  Serial.print(bmp.readAltitude());
-  Serial.println(" mnpm");
-
-  // It is possible to draw a more accurate measurement if you know
-  // the pressure at sea level, which varies with time / climate.
-  // If it is 1015 millibars, equals 101,500 Pascals.
-  Serial.print("real Altitude =");
-  Serial.print(bmp.readAltitude(101325));
-  Serial.println("mnpm");
-  Serial.println();
+//  //--------------- bmp sensor ------------------------
+//  Serial.print("Temperature = ");
+//  Serial.print(bmp.readTemperature());
+//  Serial.println(" stC");
+//
+//  Serial.print("Pressure = ");
+//  Serial.print(bmp.readPressure());
+//  Serial.println(" Pa");
+//
+//  // Calculate the elevation using the barometric pressure pattern
+//  // of 1013.25 millibar = 101325 Pascal
+//  Serial.print("Altitude = ");
+//  Serial.print(bmp.readAltitude());
+//  Serial.println(" mnpm");
+//
+//  // It is possible to draw a more accurate measurement if you know
+//  // the pressure at sea level, which varies with time / climate.
+//  // If it is 1015 millibars, equals 101,500 Pascals.
+//  Serial.print("real Altitude =");
+//  Serial.print(bmp.readAltitude(101325));
+//  Serial.println("mnpm");
+//  Serial.println();
 
   Serial.println(" ");
   Serial.println(" ");
@@ -287,7 +287,7 @@ void loop() /****** LOOP: RUNS CONSTANTLY ******/
   {
 
     //sensors.requestTemperatures();
-    int bmePressure = (int)bme.readPressure() / 10000.0F;
+//    int bmePressure = (int)bme.readPressure() / 10000.0F;
 
     // Read PLC DBxxx
     Serial.print("Reading ");
@@ -321,13 +321,13 @@ void loop() /****** LOOP: RUNS CONSTANTLY ******/
     }
     Serial.println(myString);
     S7.SetStringAt(Target, 614, (char *)myString.c_str());
-    GSM_Serial.println(myString);
-
-    while (GSM_Serial.available())
-    {
-      myString = GSM_Serial.readString(); // read the incoming data as string
-      //Serial.println(thisString);
-    }
+//    GSM_Serial.println(myString);
+//
+//    while (GSM_Serial.available())
+//    {
+//      myString = GSM_Serial.readString(); // read the incoming data as string
+//      //Serial.println(thisString);
+//    }
     S7.SetStringAt(Target, 870, (char *)myString.c_str());
 
     Watchdog += 1;
@@ -345,15 +345,19 @@ void loop() /****** LOOP: RUNS CONSTANTLY ******/
     S7.SetIntAt(Target, 26, sensor[0].getTempC(Sensor_Address_Line_A[8]) * 100);
 
     S7.SetIntAt(Target, 28, sensor[1].getTempC(Sensor_Address_Line_B[0]) * 100);
+    S7.SetIntAt(Target, 30, sensor[0].getTempC(Sensor_Address_Line_A[9]) * 100);
+    S7.SetIntAt(Target, 32, sensor[0].getTempC(Sensor_Address_Line_A[10]) * 100);
+
+
 
     //bmp
-    S7.SetIntAt(Target, 40, bmp.readTemperature() * 100);
-    S7.SetDIntAt(Target, 42, bmp.readPressure());
+    //S7.SetIntAt(Target, 40, bmp.readTemperature() * 100);
+    //S7.SetDIntAt(Target, 42, bmp.readPressure());
 
     //bme
-    S7.SetIntAt(Target, 46, bme.readTemperature() * 100);
-    S7.SetDIntAt(Target, 48, bme.readPressure());
-    S7.SetIntAt(Target, 52, bme.readHumidity() * 100);
+    //S7.SetIntAt(Target, 46, bme.readTemperature() * 100);
+    //S7.SetDIntAt(Target, 48, bme.readPressure());
+    //S7.SetIntAt(Target, 52, bme.readHumidity() * 100);
 
     // Write PLC DBxxx
     MarkTime();
