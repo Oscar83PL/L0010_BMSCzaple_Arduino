@@ -348,6 +348,9 @@ void loop() /****** LOOP: RUNS CONSTANTLY ******/
     S7.SetIntAt(Target, 30, sensor[0].getTempC(Sensor_Address_Line_A[9]) * 100);
     S7.SetIntAt(Target, 32, sensor[0].getTempC(Sensor_Address_Line_A[10]) * 100);
 
+    S7.SetIntAt(Target, 34, sensor[1].getTempC(Sensor_Address_Line_B[1]) * 100);
+    S7.SetIntAt(Target, 36, sensor[1].getTempC(Sensor_Address_Line_B[2]) * 100);
+    S7.SetIntAt(Target, 38, sensor[1].getTempC(Sensor_Address_Line_B[3]) * 100);
 
 
     //bmp

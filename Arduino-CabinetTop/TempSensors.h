@@ -12,7 +12,7 @@
 //12: 0x28, 0xFF, 0x60, 0x95, 0x6D, 0x18, 0x01, 0x48
 
 #define NUM_SENSORS_LINE_A 10 // the number of DS18B20 sensors on the 1-Wire bus A.
-#define NUM_SENSORS_LINE_B 1  // the number of DS18B20 sensors on the 1-Wire bus B.
+#define NUM_SENSORS_LINE_B 4  // the number of DS18B20 sensors on the 1-Wire bus B.
 
 /*-----( Declare Constants )-----*/
 // Pass our oneWire reference to Dallas Temperature.
@@ -34,5 +34,8 @@ const DeviceAddress Sensor_Address_Line_A[NUM_SENSORS_LINE_A] =
 const DeviceAddress Sensor_Address_Line_B[NUM_SENSORS_LINE_B] =
     {
         {0x28, 0xDE, 0x13, 0x79, 0xA2, 0x15, 0x03, 0x88}, //no.B00 parter lazienka
+        {0x28, 0xFF, 0x0A, 0xAA, 0x6D, 0x18, 0x01, 0x36}, //no.B11 parter wiatrolap
+        {0x28, 0x95, 0xD4, 0x79, 0xA2, 0x16, 0x03, 0x23}, //no.B08 parter salon/k.schodow
+        {0x28, 0xFF, 0x60, 0x95, 0x6D, 0x18, 0x01, 0x48}, //no.B12 parter pod schodami (sloiki)
                                                           //  { 0x28, 0xFF, 0xFB, 0xF9, 0x6D, 0x18, 0x01, 0x0D },     //parter lazienka
 };
